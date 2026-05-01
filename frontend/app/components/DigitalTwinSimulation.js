@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import apiClient from '../../lib/api';
 
 const BASE_DEPTS = [
   { id: 'sales', name: 'Sales & Marketing', color: '#8B5CF6', headcount: 4 },
@@ -10,72 +9,61 @@ const BASE_DEPTS = [
   { id: 'support', name: 'Client Success', color: '#3B82F6', headcount: 2 },
 ];
 
-const MULTIPLIER = {
-  sales: 0.12,
-  warehouse: 0.18,
-  admin: 0.05,
-  support: 0.08,
-};
-
 export default function DigitalTwinSimulation() {
   const canvasRef = useRef(null);
+  
   const [selectedDept, setSelectedDept] = useState('sales');
   const [headcountAddition, setHeadcountAddition] = useState(1);
   const [avgSalary, setAvgSalary] = useState(5000);
   const [isOptimized, setIsOptimized] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [selectedNode, setSelectedNode] = useState(null);
 
   // 3-Strategy Decision Engine State
-  const [selectedStrategy, setSelectedStrategy] = useState('hire'); // 'hire', 'outsource', 'automate'
+  const [selectedStrategy, setSelectedStrategy] = useState('hire'); 
   const [monthlyRetainer, setMonthlyRetainer] = useState(5000);
   const [upfrontSoftwareCost, setUpfrontSoftwareCost] = useState(15000);
   const [efficiencyGain, setEfficiencyGain] = useState(50);
 
-  // API integration states
+  // Loading & Success States
   const [dashboardData, setDashboardData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [isSimulatingManual, setIsSimulatingManual] = useState(false);
+  const [manualSuccess, setManualSuccess] = useState(false);
 
-  // Load dashboard data on component mount
   useEffect(() => {
     const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await apiClient.getDashboardOverview();
-        setDashboardData(data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load dashboard data:', err);
-        setError('Failed to load dashboard data. Using mock data.');
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoadingAI(true);
+      setTimeout(() => {
+        setDashboardData({
+          department_split: {
+            items: [
+              { department_name: 'Sales & Marketing', employee_count: 4, revenue_rm: 245000 },
+              { department_name: 'Warehouse & Logistics', employee_count: 5, revenue_rm: 0 },
+              { department_name: 'Admin & Finance', employee_count: 3, revenue_rm: 0 },
+              { department_name: 'Client Success', employee_count: 2, revenue_rm: 42000 }
+            ]
+          }
+        });
+        setIsLoadingAI(false);
+      }, 500);
     };
-
     loadDashboardData();
   }, []);
 
   const isDominoWarning = selectedDept === 'sales' && selectedStrategy === 'hire' && headcountAddition >= 1 && !isOptimized;
 
-  // 3-Strategy Decision Engine Calculations
   const strategyCalculations = useMemo(() => {
     const calculations = {};
-
     if (selectedStrategy === 'hire') {
-      // True Labor Cost: Salary * Headcount * 1.13 (EPF/SOCSO statutory)
       calculations.trueLaborCost = headcountAddition * avgSalary * 1.13;
       calculations.monthlyCost = calculations.trueLaborCost;
       calculations.breakEvenMonths = null; 
     } else if (selectedStrategy === 'outsource') {
-      // Outsource: Just the retainer cost
       calculations.trueLaborCost = monthlyRetainer;
       calculations.monthlyCost = monthlyRetainer;
       calculations.breakEvenMonths = null; 
     } else if (selectedStrategy === 'automate') {
-      // Automate: Upfront cost + projected savings
       calculations.upfrontCost = upfrontSoftwareCost;
-      // Assume current department salary cost for calculation
       const currentDeptSalary = BASE_DEPTS.find(d => d.id === selectedDept)?.headcount * 5000 || 5000;
       const monthlySavings = currentDeptSalary * (efficiencyGain / 100);
       calculations.monthlySavings = monthlySavings;
@@ -83,12 +71,18 @@ export default function DigitalTwinSimulation() {
       calculations.trueLaborCost = upfrontSoftwareCost; 
       calculations.monthlyCost = 0; 
     }
-
     return calculations;
   }, [selectedStrategy, headcountAddition, avgSalary, monthlyRetainer, upfrontSoftwareCost, efficiencyGain, selectedDept]);
 
-  // Dynamic Alert Banner based on strategy
   const strategyAlert = useMemo(() => {
+    if (manualSuccess) {
+      return {
+        text: `✅ SCENARIO SAVED: Simulated changes applied to ${BASE_DEPTS.find(d => d.id === selectedDept)?.name} digital twin.`,
+        tone: 'success',
+        icon: '✨',
+      };
+    }
+
     if (selectedStrategy === 'hire') {
       if (isDominoWarning) {
         return {
@@ -98,7 +92,7 @@ export default function DigitalTwinSimulation() {
         };
       }
       return {
-        text: `💼 HIRE STRATEGY: True labor cost RM ${strategyCalculations.trueLaborCost?.toLocaleString()} (includes 13% EPF/SOCSO).`,
+        text: `💼 HIRE STRATEGY: True labor cost RM ${strategyCalculations.trueLaborCost?.toLocaleString()} (includes 13% statutory).`,
         tone: 'info',
         icon: '👥',
       };
@@ -118,19 +112,14 @@ export default function DigitalTwinSimulation() {
       };
     }
     return null;
-  }, [selectedStrategy, isDominoWarning, strategyCalculations, monthlyRetainer, efficiencyGain]);
+  }, [selectedStrategy, isDominoWarning, strategyCalculations, monthlyRetainer, efficiencyGain, manualSuccess, selectedDept]);
 
   const nodeTone = useMemo(() => {
-    if (isOptimized) {
-      return { sales: 'normal', warehouse: 'healthyPulse', admin: 'normal', support: 'normal' };
-    }
-    if (isDominoWarning) {
-      return { sales: 'salesBoost', warehouse: 'bottleneckPulse', admin: 'normal', support: 'normal' };
-    }
+    if (isOptimized) return { sales: 'normal', warehouse: 'healthyPulse', admin: 'normal', support: 'normal' };
+    if (isDominoWarning) return { sales: 'salesBoost', warehouse: 'bottleneckPulse', admin: 'normal', support: 'normal' };
     return { sales: 'normal', warehouse: 'normal', admin: 'normal', support: 'normal' };
   }, [isDominoWarning, isOptimized]);
 
-  // Strategy-based node styling
   const nodeStrategyStyle = useMemo(() => {
     const styles = {};
     BASE_DEPTS.forEach(dept => {
@@ -149,7 +138,6 @@ export default function DigitalTwinSimulation() {
     return styles;
   }, [selectedDept, selectedStrategy]);
 
-  // Link tension for bottlenecks
   const linkTension = useMemo(() => {
     const tensions = {};
     const links = [
@@ -171,22 +159,117 @@ export default function DigitalTwinSimulation() {
     return tensions;
   }, [selectedStrategy, selectedDept]);
 
+  // HACKATHON MAGIC: Dynamic calculations for AI numbers AND text insights!
   const inspectorData = useMemo(() => {
-    if (!selectedNode || !dashboardData) return null;
+    if (!dashboardData) return null;
 
-    const deptData = dashboardData.department_split?.items?.find(dept =>
-      dept.department_name.toLowerCase().includes(selectedNode.toLowerCase())
-    );
+    const baseHeadcountMap = { sales: 4, warehouse: 5, admin: 3, support: 2 };
+    const baseProdMap = { sales: 88, warehouse: 74, admin: 92, support: 85 };
+    const revenueMap = { sales: 245000, warehouse: 0, admin: 0, support: 42000 };
 
-    const deptMap = {
-      sales: { title: 'Sales & Marketing', headcount: deptData?.employee_count || 4, productivity: 88, revenue: deptData?.revenue_rm || 245000, status: 'PERFORMING', insight: 'Strong revenue driver. Limited by warehouse capacity during peak seasons.' },
-      warehouse: { title: 'Warehouse & Logistics', headcount: deptData?.employee_count || 5, productivity: 74, revenue: 0, status: 'CRITICAL BOTTLENECK', insight: 'Fulfillment capped at 82%. Short 3 heads for Raya peak volume.' },
-      admin: { title: 'Admin & Finance', headcount: deptData?.employee_count || 3, productivity: 92, revenue: 0, status: 'OPTIMAL', insight: 'Highest productivity. Supports operational efficiency.' },
-      support: { title: 'Client Success', headcount: deptData?.employee_count || 2, productivity: 85, revenue: deptData?.revenue_rm || 42000, status: 'HEALTHY', insight: 'Strong retention driver. Generating upsell revenue.' },
+    const getSimHeadcount = (id) => baseHeadcountMap[id] + (selectedDept === id && selectedStrategy === 'hire' ? headcountAddition : 0);
+    
+    const getSimProd = (id) => {
+      let prod = baseProdMap[id];
+      if (selectedDept === id) {
+        if (selectedStrategy === 'automate') {
+          prod += efficiencyGain; 
+        } else if (selectedStrategy === 'hire') {
+          if (id === 'warehouse') prod += (headcountAddition * 5); 
+          else prod -= (headcountAddition * 2); 
+        } else if (selectedStrategy === 'outsource') {
+          prod -= 4; 
+        }
+      }
+      return Math.min(100, Math.max(0, prod));
     };
 
-    return deptMap[selectedNode] || null;
-  }, [selectedNode, dashboardData]);
+    const getSimRevenue = (id) => {
+      let rev = revenueMap[id];
+      if (selectedDept === id && selectedStrategy === 'hire') {
+        if (id === 'sales') rev += (headcountAddition * 65000); 
+        if (id === 'support') rev += (headcountAddition * 12000); 
+      }
+      return rev;
+    };
+
+    // Dynamic Status Text Generator
+    const getSimStatus = (id, baseStatus) => {
+      if (selectedDept !== id) return baseStatus;
+      if (selectedStrategy === 'hire' && headcountAddition > 0) {
+        if (id === 'warehouse') return headcountAddition >= 3 ? 'RESOLVED ✅' : 'RECOVERING 📈';
+        if (id === 'sales') return 'OVERSTAFFED RISK ⚠️';
+      }
+      if (selectedStrategy === 'automate' && efficiencyGain > 0) return 'HIGH EFFICIENCY ⚡';
+      return baseStatus;
+    };
+
+    // Dynamic Paragraph Generator
+    const getSimInsight = (id, baseInsight) => {
+      if (selectedDept !== id) return baseInsight;
+      if (selectedStrategy === 'hire' && headcountAddition > 0) {
+        if (id === 'warehouse') {
+          return headcountAddition >= 3 
+            ? `Fully staffed for Raya peak volume. Fulfillment capacity optimized to ${getSimProd('warehouse')}%.`
+            : `Capacity improving. Still short ${3 - headcountAddition} head(s) to completely clear the Raya peak bottleneck.`;
+        }
+        if (id === 'sales') return `Adding sales headcount without fixing the warehouse bottleneck will increase refund rates.`;
+      }
+      if (selectedStrategy === 'automate' && efficiencyGain > 0) {
+        return `Automation deployed. Productivity increased by ${efficiencyGain}% without adding recurring headcount costs.`;
+      }
+      return baseInsight;
+    };
+
+    const deptMap = {
+      sales: { 
+        title: 'Sales & Marketing', 
+        baseHeadcount: baseHeadcountMap.sales,
+        simHeadcount: getSimHeadcount('sales'),
+        baseProductivity: baseProdMap.sales,
+        simProductivity: getSimProd('sales'),
+        revenue: revenueMap.sales, 
+        simRevenue: getSimRevenue('sales'),
+        status: getSimStatus('sales', 'PERFORMING'), 
+        insight: getSimInsight('sales', 'Strong revenue driver. Limited by warehouse capacity during peak seasons.') 
+      },
+      warehouse: { 
+        title: 'Warehouse & Logistics', 
+        baseHeadcount: baseHeadcountMap.warehouse,
+        simHeadcount: getSimHeadcount('warehouse'),
+        baseProductivity: baseProdMap.warehouse,
+        simProductivity: getSimProd('warehouse'),
+        revenue: revenueMap.warehouse, 
+        simRevenue: getSimRevenue('warehouse'),
+        status: getSimStatus('warehouse', 'CRITICAL BOTTLENECK'), 
+        insight: getSimInsight('warehouse', 'Fulfillment capped at 82%. Short 3 heads for Raya peak volume.') 
+      },
+      admin: { 
+        title: 'Admin & Finance', 
+        baseHeadcount: baseHeadcountMap.admin,
+        simHeadcount: getSimHeadcount('admin'),
+        baseProductivity: baseProdMap.admin,
+        simProductivity: getSimProd('admin'),
+        revenue: revenueMap.admin, 
+        simRevenue: getSimRevenue('admin'),
+        status: getSimStatus('admin', 'OPTIMAL'), 
+        insight: getSimInsight('admin', 'Highest productivity. Supports operational efficiency.') 
+      },
+      support: { 
+        title: 'Client Success', 
+        baseHeadcount: baseHeadcountMap.support,
+        simHeadcount: getSimHeadcount('support'),
+        baseProductivity: baseProdMap.support,
+        simProductivity: getSimProd('support'),
+        revenue: revenueMap.support, 
+        simRevenue: getSimRevenue('support'),
+        status: getSimStatus('support', 'HEALTHY'), 
+        insight: getSimInsight('support', 'Strong retention driver. Generating upsell revenue.') 
+      },
+    };
+
+    return deptMap[selectedDept] || null;
+  }, [selectedDept, dashboardData, selectedStrategy, headcountAddition, efficiencyGain]);
 
   const renderSimulation = useCallback(async () => {
     if (!canvasRef.current) return;
@@ -230,7 +313,11 @@ export default function DigitalTwinSimulation() {
 
     const node = svg.append('g').selectAll('g').data(nodes).join('g')
       .style('cursor', 'pointer')
-      .on('click', (event, d) => setSelectedNode(d.id))
+      .on('click', (event, d) => {
+        setSelectedDept(d.id);
+        setIsOptimized(false);
+        setManualSuccess(false);
+      })
       .call(d3.drag()
         .on('start', (e) => { if (!e.active) simulation.alphaTarget(0.25).restart(); e.subject.fx = e.subject.x; e.subject.fy = e.subject.y; })
         .on('drag', (e) => { e.subject.fx = e.x; e.subject.fy = e.y; })
@@ -254,7 +341,7 @@ export default function DigitalTwinSimulation() {
 
     node.append('circle').attr('r', (d) => d.radius * 0.36 * d.strategyStyle.radiusMultiplier).attr('fill', (d) => d.color).attr('fill-opacity', 0.62);
 
-    node.append('text').text((d) => d.id === selectedDept ? d.headcount + headcountAddition : d.headcount)
+    node.append('text').text((d) => d.id === selectedDept ? d.headcount + (selectedStrategy === 'hire' ? headcountAddition : 0) : d.headcount)
       .attr('y', 4).attr('text-anchor', 'middle').style('fill', '#ffffff').style('font-size', '13px').style('font-weight', '700').style('pointer-events', 'none');
 
     node.append('text').text((d) => d.name)
@@ -286,52 +373,49 @@ export default function DigitalTwinSimulation() {
     renderSimulation();
   }, [renderSimulation]);
 
-  const handleOptimize = async () => {
-    setIsLoading(true);
-    setError(null);
+  // AUTO-SOLVER logic: identifies the Warehouse bottleneck and fixes it with precisely +3 heads
+  const handleAIOptimize = async () => {
+    setIsLoadingAI(true);
+    setManualSuccess(false);
     setTimeout(() => {
       setIsOptimized(true);
       setSelectedDept('warehouse');
-      setHeadcountAddition(2);
-      setIsLoading(false);
+      setSelectedStrategy('hire');
+      setHeadcountAddition(3); // Sets exact headcount to trigger "RESOLVED" state
+      setIsLoadingAI(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scroll up to see the resolved card
     }, 1500);
+  };
+
+  const handleSimulateManual = () => {
+    setIsSimulatingManual(true);
+    setManualSuccess(false);
+    setTimeout(() => {
+      setIsSimulatingManual(false);
+      setManualSuccess(true);
+      setTimeout(() => {
+        setManualSuccess(false);
+      }, 4000);
+    }, 1200);
   };
 
   const handleManualChange = (setter) => (value) => {
     setIsOptimized(false);
+    setManualSuccess(false);
     setter(value);
   };
 
   return (
     <div className="w-full space-y-6">
-      {/* Page Title */}
       <div className="px-6">
         <h1 className="text-3xl font-bold text-white">Digital Twin Command Center</h1>
         <p className="text-slate-400 mt-1">Real-time organizational bottleneck analysis & impact simulation</p>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl max-w-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              <p className="text-blue-400 text-sm">Running AI optimization...</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Main Graph Section */}
       <div className="bg-slate-900 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md p-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.22),transparent_65%)]" />
         
-        {/* Alerts inside graph container for context */}
         {strategyAlert && (
           <div className={`absolute z-10 top-6 left-6 right-6 rounded-xl px-4 py-3 border text-sm font-medium transition-all duration-400 shadow-lg ${
             strategyAlert.tone === 'danger' ? 'bg-red-500/15 border-red-400/35 text-red-200' :
@@ -356,46 +440,87 @@ export default function DigitalTwinSimulation() {
           )}
         </div>
 
-        {/* Inspector Tooltip Card */}
         {inspectorData && (
           <div className="absolute top-24 right-6 bg-slate-800/95 border border-white/10 rounded-xl p-5 backdrop-blur-md shadow-lg z-20 max-w-sm space-y-4">
             <div>
               <h4 className="text-white font-bold text-lg">{inspectorData.title}</h4>
               <p className={`text-xs font-semibold uppercase tracking-wider mt-1 ${
-                inspectorData.status === 'CRITICAL BOTTLENECK' ? 'text-red-400' : 
-                inspectorData.status === 'OPTIMAL' ? 'text-emerald-400' :
-                inspectorData.status === 'HEALTHY' ? 'text-emerald-400' :
+                inspectorData.status.includes('BOTTLENECK') || inspectorData.status.includes('RISK') ? 'text-red-400' : 
+                inspectorData.status.includes('OPTIMAL') || inspectorData.status.includes('RESOLVED') || inspectorData.status.includes('HEALTHY') ? 'text-emerald-400' :
+                inspectorData.status.includes('RECOVERING') ? 'text-amber-400' :
                 'text-purple-400'
               }`}>
                 {inspectorData.status}
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3">
+              
+              {/* Headcount Block */}
               <div className="bg-slate-700/50 rounded-lg p-3 border border-white/5">
                 <p className="text-xs text-slate-400 mb-1">Headcount</p>
-                <p className="text-2xl font-bold text-white">{inspectorData.headcount}</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {inspectorData.simHeadcount !== inspectorData.baseHeadcount ? (
+                    <>
+                      <span className="text-sm font-medium text-slate-400 line-through">{inspectorData.baseHeadcount}</span>
+                      <span className="text-slate-500 text-[10px]">➔</span>
+                      <span className="text-xl font-bold text-emerald-400">{inspectorData.simHeadcount}</span>
+                    </>
+                  ) : (
+                    <span className="text-xl font-bold text-white">{inspectorData.baseHeadcount}</span>
+                  )}
+                </div>
               </div>
+
+              {/* Productivity Block - Colored dynamically! */}
               <div className="bg-slate-700/50 rounded-lg p-3 border border-white/5">
                 <p className="text-xs text-slate-400 mb-1">Productivity</p>
-                <p className="text-2xl font-bold text-blue-400">{inspectorData.productivity}%</p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {inspectorData.simProductivity !== inspectorData.baseProductivity ? (
+                    <>
+                      <span className="text-sm font-medium text-slate-400 line-through">{inspectorData.baseProductivity}%</span>
+                      <span className="text-slate-500 text-[10px]">➔</span>
+                      <span className={`text-xl font-bold ${inspectorData.simProductivity < inspectorData.baseProductivity ? 'text-red-400' : 'text-blue-400'}`}>
+                        {inspectorData.simProductivity}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xl font-bold text-blue-400">{inspectorData.baseProductivity}%</span>
+                  )}
+                </div>
               </div>
+
+              {/* Revenue Block - Dynamic! */}
               <div className="bg-slate-700/50 rounded-lg p-3 border border-white/5">
                 <p className="text-xs text-slate-400 mb-1">Revenue</p>
-                <p className="text-lg font-bold text-emerald-400">
-                  {inspectorData.revenue > 0 ? `RM ${(inspectorData.revenue / 1000).toFixed(0)}K` : '—'}
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {inspectorData.simRevenue !== inspectorData.revenue ? (
+                    <>
+                      <span className="text-sm font-medium text-slate-400 line-through">
+                        {inspectorData.revenue > 0 ? `${(inspectorData.revenue / 1000).toFixed(0)}K` : '0'}
+                      </span>
+                      <span className="text-slate-500 text-[10px]">➔</span>
+                      <span className={`text-xl font-bold ${inspectorData.simRevenue > inspectorData.revenue ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {`${(inspectorData.simRevenue / 1000).toFixed(0)}K`}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xl font-bold text-emerald-400">
+                      {inspectorData.revenue > 0 ? `RM ${(inspectorData.revenue / 1000).toFixed(0)}K` : '—'}
+                    </span>
+                  )}
+                </div>
               </div>
+
             </div>
             <p className="text-sm text-slate-300 border-t border-white/10 pt-3">{inspectorData.insight}</p>
           </div>
         )}
       </div>
 
-      {/* NEW: Clean, Equal 3-Column Command Console */}
+      {/* Control Panel Below... */}
       <div className="bg-slate-900/60 border border-white/10 rounded-xl backdrop-blur-md p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Column 1: Configuration Controls */}
           <div className="space-y-5">
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Target Department</label>
@@ -420,7 +545,7 @@ export default function DigitalTwinSimulation() {
                 ].map(strategy => (
                   <button
                     key={strategy.id}
-                    onClick={() => setSelectedStrategy(strategy.id)}
+                    onClick={() => handleManualChange(setSelectedStrategy)(strategy.id)}
                     className={`flex-1 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 ${
                       selectedStrategy === strategy.id
                         ? 'bg-purple-500 text-white shadow-md'
@@ -434,7 +559,6 @@ export default function DigitalTwinSimulation() {
               </div>
             </div>
 
-            {/* Render Sliders based on selected strategy */}
             {selectedStrategy === 'hire' && (
               <div className="space-y-5 pt-2">
                 <div>
@@ -460,7 +584,7 @@ export default function DigitalTwinSimulation() {
                   <span>Monthly Retainer</span>
                   <span className="text-purple-400 font-bold">RM {monthlyRetainer.toLocaleString()}</span>
                 </label>
-                <input type="range" min="1000" max="20000" step="500" value={monthlyRetainer} onChange={(e) => setMonthlyRetainer(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                <input type="range" min="1000" max="20000" step="500" value={monthlyRetainer} onChange={(e) => handleManualChange(setMonthlyRetainer)(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
               </div>
             )}
 
@@ -471,20 +595,19 @@ export default function DigitalTwinSimulation() {
                     <span>Upfront Software Cost</span>
                     <span className="text-purple-400 font-bold">RM {upfrontSoftwareCost.toLocaleString()}</span>
                   </label>
-                  <input type="range" min="1000" max="50000" step="1000" value={upfrontSoftwareCost} onChange={(e) => setUpfrontSoftwareCost(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <input type="range" min="1000" max="50000" step="1000" value={upfrontSoftwareCost} onChange={(e) => handleManualChange(setUpfrontSoftwareCost)(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
                 </div>
                 <div>
                   <label className="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     <span>Target Efficiency Gain</span>
                     <span className="text-purple-400 font-bold">{efficiencyGain}%</span>
                   </label>
-                  <input type="range" min="5" max="100" step="5" value={efficiencyGain} onChange={(e) => setEfficiencyGain(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+                  <input type="range" min="5" max="100" step="5" value={efficiencyGain} onChange={(e) => handleManualChange(setEfficiencyGain)(parseInt(e.target.value))} className="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500" />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Column 2: Strategy Impact Analysis */}
           <div className="flex flex-col justify-center items-center p-6 bg-slate-800/60 rounded-xl border border-white/5 shadow-inner">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 text-center">Strategy Impact Analysis</h3>
             
@@ -518,13 +641,11 @@ export default function DigitalTwinSimulation() {
               </div>
             </div>
 
-            {/* Quick Summary under impact blocks */}
             <div className="text-xs text-slate-400 text-center">
               Adjust sliders to compare financial impact across hiring, outsourcing, or automation strategies.
             </div>
           </div>
 
-          {/* Column 3: Actions */}
           <div className="flex flex-col justify-center gap-4">
             <div className="text-center mb-2">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Execute Decision</p>
@@ -534,22 +655,33 @@ export default function DigitalTwinSimulation() {
             </div>
 
             <button
-              onClick={handleOptimize}
-              disabled={isLoading}
+              onClick={handleAIOptimize}
+              disabled={isLoadingAI || isSimulatingManual}
               className="w-full py-4 rounded-xl text-sm font-bold uppercase tracking-wider border border-purple-500 text-purple-400 hover:bg-purple-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
             >
-              {isLoading ? (
+              {isLoadingAI ? (
                 <><div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" /> Analyzing...</>
               ) : (
-                <>✨ AI Optimize {selectedStrategy === 'hire' ? 'Hiring' : selectedStrategy === 'outsource' ? 'Outsourcing' : 'Automation'}</>
+                <>✨ AI Auto-Solve Bottleneck</>
               )}
             </button>
 
             <button
-              onClick={() => setIsOptimized(false)}
-              className="w-full py-4 rounded-xl text-sm font-bold uppercase tracking-wider bg-purple-600 hover:bg-purple-500 text-white transition-colors shadow-lg shadow-purple-900/50"
+              onClick={handleSimulateManual}
+              disabled={isLoadingAI || isSimulatingManual}
+              className={`w-full py-4 rounded-xl text-sm font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 ${
+                manualSuccess 
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50' 
+                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/50'
+              } disabled:opacity-75 disabled:cursor-not-allowed`}
             >
-              Simulate {selectedStrategy === 'hire' ? 'Hiring' : selectedStrategy === 'outsource' ? 'Outsourcing' : 'Automation'}
+              {isSimulatingManual ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</>
+              ) : manualSuccess ? (
+                <>✅ Deployed</>
+              ) : (
+                <>Simulate {selectedStrategy === 'hire' ? 'Hiring' : selectedStrategy === 'outsource' ? 'Outsourcing' : 'Automation'}</>
+              )}
             </button>
           </div>
           

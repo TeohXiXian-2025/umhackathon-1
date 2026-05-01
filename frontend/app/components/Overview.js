@@ -1,9 +1,59 @@
-"use client";
+'use client';
 
+import { useState } from "react";
 import { useNavigation } from "../context/NavigationContext";
 
 export default function Overview() {
   const { setActiveView } = useNavigation();
+  
+  // --- NEW AI STATE FOR CHAT WIDGET ---
+  const [chatInput, setChatInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatHistory, setChatHistory] = useState([
+    { role: "user", text: "Why shouldn't I hire salespeople?" },
+    { 
+      role: "ai", 
+      text: "Based on 1,200 WhatsApp logs, warehouse fulfillment is capping at 82%. Hiring sales will increase refund rates. Focus on logistics first.",
+      note: "Note: We also detected a high correlation between negative WhatsApp sentiment and waybill printer complaints during last year's 11.11 sale."
+    }
+  ]);
+
+  // --- NEW AI FUNCTION ---
+  async function handleSendMessage(overrideText = null) {
+    const textToSend = overrideText || chatInput;
+    if (!textToSend.trim()) return;
+
+    // Add user message to UI
+    setChatHistory((prev) => [...prev, { role: "user", text: textToSend }]);
+    setChatInput(""); 
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: textToSend,
+          systemInstruction: "You are an executive HR AI assistant for a Malaysian SME. Base your answers on operational data. Keep it under 3 sentences and sound professional."
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.text) {
+        setChatHistory((prev) => [...prev, { role: "ai", text: data.text }]);
+      } else {
+        setChatHistory((prev) => [...prev, { role: "ai", text: "Error: Could not retrieve answer." }]);
+      }
+    } catch (error) {
+      console.error(error);
+      setChatHistory((prev) => [...prev, { role: "ai", text: "Error connecting to AI server." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  // -----------------------
+
   const actions = [
     {
       tone: "red",
@@ -13,6 +63,7 @@ export default function Overview() {
       impactHighlight: "RM 4,500/mo",
       impactSuffix: " & shifts staff to VIP retention.",
       cta: "Deploy Automation",
+      targetTab: "simulation", // Maps to Digital Twin
     },
     {
       tone: "green",
@@ -21,7 +72,8 @@ export default function Overview() {
       impactPrefix: "Freeze sales hiring. Hire 1 Supply Chain Manager to unlock ",
       impactHighlight: "+30% capacity",
       impactSuffix: ".",
-      cta: "View Candidate Pipeline",
+      cta: "Simulate Hire", // Tweaked to fit Digital Twin routing
+      targetTab: "simulation", // Maps to Digital Twin
     },
     {
       tone: "yellow",
@@ -31,6 +83,7 @@ export default function Overview() {
       impactHighlight: "RM 60k/yr",
       impactSuffix: ".",
       cta: "Setup Escrow Contract",
+      targetTab: "blockchain", // Maps to Escrow Ledger
     },
   ];
 
@@ -51,6 +104,7 @@ export default function Overview() {
 
   return (
     <div className="space-y-4 max-h-[140vh] overflow-hidden">
+      {/* Top Metric Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-sm p-4">
           <p className="text-[10px] uppercase tracking-wider text-slate-400 mb-2">
@@ -77,6 +131,7 @@ export default function Overview() {
         </div>
       </div>
 
+      {/* Priority Actions */}
       <section className="rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-sm p-4">
         <div className="mb-3">
           <h2 className="text-sm md:text-base font-semibold text-white">
@@ -104,7 +159,10 @@ export default function Overview() {
                 <span className="text-purple-400 font-semibold">{action.impactHighlight}</span>
                 {action.impactSuffix}
               </p>
-              <button className="w-full rounded-lg bg-purple-500 hover:bg-purple-400 transition-colors text-white text-xs font-semibold py-2.5">
+              <button 
+                onClick={() => setActiveView(action.targetTab)}
+                className="w-full rounded-lg bg-purple-500 hover:bg-purple-400 transition-colors text-white text-xs font-semibold py-2.5 shadow-lg shadow-purple-900/20"
+              >
                 {action.cta}
               </button>
             </article>
@@ -112,6 +170,7 @@ export default function Overview() {
         </div>
       </section>
 
+      {/* Executive Summary & AI Chat */}
       <section className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm p-4">
         <h3 className="text-gray-300 text-lg font-semibold mb-4">
           Priority Business Optimization Summary: Raya Peak &amp; Resource Efficiency
@@ -137,6 +196,7 @@ export default function Overview() {
           </article>
         </div>
 
+        {/* --- DYNAMIC AI CHAT INTERFACE --- */}
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h4 className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
@@ -144,54 +204,87 @@ export default function Overview() {
             </h4>
           </div>
 
+          {/* Preset Buttons now trigger the API automatically */}
           <div className="flex flex-wrap gap-2 mb-3">
-            <button className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors">
+            <button 
+              onClick={() => handleSendMessage("How can I reduce the waybill cost faster?")}
+              className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors"
+            >
               How can I reduce the waybill cost faster?
             </button>
-            <button className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors">
+            <button 
+              onClick={() => handleSendMessage("What's the best logistics strategy for Q4?")}
+              className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors"
+            >
               What&apos;s the best logistics strategy for Q4?
             </button>
-            <button className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors">
+            <button 
+              onClick={() => handleSendMessage("Show projected refund risk if sales grows 20%")}
+              className="px-3 py-1.5 rounded-full border border-purple-500/50 text-xs text-purple-200 hover:bg-purple-500/10 transition-colors"
+            >
               Show projected refund risk if sales grows 20%
             </button>
           </div>
 
-          <div className="rounded-lg bg-black/20 border border-white/10 p-3 space-y-3 min-h-[180px] mb-3">
-            <div className="flex justify-end">
-              <div className="max-w-[75%] rounded-xl rounded-br-sm bg-purple-500/20 border border-purple-400/30 px-3 py-2">
-                <p className="text-xs text-slate-100">Why shouldn&apos;t I hire salespeople?</p>
-              </div>
-            </div>
+          {/* Dynamic Chat History */}
+          <div className="rounded-lg bg-black/20 border border-white/10 p-3 space-y-3 h-[180px] overflow-y-auto mb-3 scrollbar-thin scrollbar-thumb-purple-900 scrollbar-track-transparent">
+            {chatHistory.map((msg, index) => (
+              msg.role === "user" ? (
+                <div key={index} className="flex justify-end">
+                  <div className="max-w-[75%] rounded-xl rounded-br-sm bg-purple-500/20 border border-purple-400/30 px-3 py-2">
+                    <p className="text-xs text-slate-100">{msg.text}</p>
+                  </div>
+                </div>
+              ) : (
+                <div key={index} className="flex justify-start">
+                  <div className="max-w-[85%] border-l-2 border-purple-500 pl-3 py-1">
+                    <p className="text-xs leading-relaxed text-slate-200">
+                      {msg.text}
+                      {/* Only renders the italic note if it exists in the message object */}
+                      {msg.note && (
+                        <span className="text-purple-200 italic">
+                          {' '}{msg.note}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )
+            ))}
 
-            <div className="flex justify-start">
-              <div className="max-w-[85%] border-l-2 border-purple-500 pl-3 py-1">
-                <p className="text-xs leading-relaxed text-slate-200">
-                  Based on 1,200 WhatsApp logs, warehouse fulfillment is capping at 82%. Hiring sales will increase
-                  refund rates. Focus on logistics first.
-                  <span className="text-purple-200 italic">
-                    {' '}
-                    Note: We also detected a high correlation between negative WhatsApp sentiment and waybill printer
-                    complaints during last year&apos;s 11.11 sale.
-                  </span>
-                </p>
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] border-l-2 border-purple-500 pl-3 py-1 text-xs text-purple-400 animate-pulse">
+                  Analyzing data...
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
+          {/* Input Box */}
           <div className="flex items-center gap-2">
             <input
               type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ask the data..."
               className="flex-1 h-10 rounded-lg border border-white/10 bg-slate-900/70 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50"
             />
             <button
-              className="h-10 w-10 rounded-lg flex items-center justify-center text-white transition-colors"
-              style={{ background: '#8B5CF6' }}
+              onClick={() => handleSendMessage()}
+              disabled={isLoading}
+              className={`h-10 w-10 rounded-lg flex items-center justify-center text-white transition-colors ${isLoading ? 'bg-purple-900 cursor-not-allowed' : 'bg-purple-500 hover:bg-purple-400'}`}
               aria-label="Send message"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              {isLoading ? (
+                <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              )}
             </button>
           </div>
         </div>

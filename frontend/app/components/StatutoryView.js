@@ -41,11 +41,20 @@ export default function StatutoryView() {
   const totalCashOutflow = grossSalary + epfEmployer + socsoEmployer + eisEmployer;
 
   const currentCashReserves = 85000;
+  const baselinePayroll = 42500; // Baseline before simulation
+
   const currentMonthlyPayroll = Math.round(totalCashOutflow * 12.33);
   const currentRunway = (currentCashReserves / currentMonthlyPayroll).toFixed(1);
-  const maxSafeHires = 4;
-  const payrollChangePercent = ((currentMonthlyPayroll - 42500) / 42500 * 100).toFixed(1);
-  const projectedRunway = (currentCashReserves / currentMonthlyPayroll).toFixed(1);
+  
+  // DYNAMIC MAX SAFE HIRES CALCULATION
+  const maxAllowableMonthlyPayroll = currentCashReserves / 1.5;
+  const surplusBudget = maxAllowableMonthlyPayroll - currentMonthlyPayroll;
+  const maxSafeHires = surplusBudget > 0 ? Math.floor(surplusBudget / totalCashOutflow) : 0;
+
+  const payrollChangePercent = (((currentMonthlyPayroll - baselinePayroll) / baselinePayroll) * 100).toFixed(1);
+  
+  // Fix projected runway to show the impact of adding ONE more hire of this profile
+  const projectedRunway = (currentCashReserves / (currentMonthlyPayroll + totalCashOutflow)).toFixed(1);
 
   return (
     <div className="space-y-6">

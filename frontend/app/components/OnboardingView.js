@@ -5,7 +5,7 @@
  * ==============================================
  * Personalized onboarding via semantic business description.
  * Users describe their business goals and needs in natural language,
- * and GLM AI (ILMU-GLM-5.1) analyzes it to recommend modules.
+ * and Gemini AI analyzes it to recommend modules.
  */
 
 import { useState } from 'react';
@@ -35,24 +35,62 @@ export default function OnboardingView() {
   const [recommendations, setRecommendations] = useState(null);
   const [selectedModules, setSelectedModules] = useState([]);
 
+  // --- NEW AI FUNCTION ---
   const handleAnalyze = async () => {
     setAnalyzing(true);
+    const headcount = parseInt(businessDetails.headcount) || 10;
 
-    // Simulate GLM AI analysis (in production, this calls ILMU-GLM-5.1)
-    setTimeout(() => {
-      const headcount = parseInt(businessDetails.headcount) || 10;
-      const isRetail = businessDesc.toLowerCase().includes('retail') || businessDesc.toLowerCase().includes('kedai') || businessDetails.industry.toLowerCase().includes('retail');
-      const needsOT = businessDesc.toLowerCase().includes('overtime') || businessDesc.toLowerCase().includes('ot') || businessDesc.toLowerCase().includes('shift');
-      const needsGig = businessDesc.toLowerCase().includes('freelance') || businessDesc.toLowerCase().includes('part-time') || businessDesc.toLowerCase().includes('seasonal');
-      const needsWhatsApp = businessDesc.toLowerCase().includes('whatsapp') || businessDesc.toLowerCase().includes('chat');
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: `
+            Analyze this Malaysian SME and recommend the best software modules for them.
+            
+            Company Details:
+            - Name: ${businessDetails.companyName || 'Unknown'}
+            - Industry: ${businessDetails.industry || 'Unknown'}
+            - Headcount: ${headcount}
+            - Revenue: ${businessDetails.revenue || 'Unknown'}
+            
+            User's specific challenges: "${businessDesc}"
 
-      const recommended = ['payroll', 'attendance'];
-      if (headcount >= 15) recommended.push('dss');
-      if (headcount >= 10) recommended.push('anomaly');
-      if (needsWhatsApp || isRetail) recommended.push('nlp');
-      if (needsGig || isRetail) recommended.push('blockchain');
-      if (headcount >= 5) recommended.push('sentiment');
-      recommended.push('benchmark');
+            Available Module IDs to choose from: 
+            [payroll, attendance, dss, anomaly, nlp, blockchain, sentiment, benchmark]
+            
+            Based on their challenges, select the most relevant module IDs. Also, write 2 to 3 specific insights explaining WHY these modules will solve their problems in a Malaysian business context.
+          `,
+          systemInstruction: `You are an AI onboarding specialist. You MUST respond ONLY with a valid JSON object. Do not include markdown tags like \`\`\`json. The structure must be exactly: {"modules": ["id1", "id2"], "insights": ["Insight 1", "Insight 2"]}`
+        }),
+      });
+
+      const data = await response.json();
+      
+      // We parse the AI's text response into a JSON object to feed the UI
+      let aiResult;
+      try {
+        // Clean the string just in case the AI added markdown backticks
+        const cleanJsonString = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+        aiResult = JSON.parse(cleanJsonString);
+      } catch (parseError) {
+        console.error("Failed to parse AI JSON:", data.text);
+        // Fallback if the AI forgets to format as JSON
+        aiResult = {
+          modules: ['payroll', 'attendance', 'nlp'],
+          insights: ["We analyzed your text and recommend starting with our core automation modules to streamline your current bottlenecks."]
+        };
+      }
+
+      // Ensure they always get at least payroll and attendance for the demo
+      const recommended = [...new Set(['payroll', 'attendance', ...(aiResult.modules || [])])];
+      
+      // Hardcoded business logic for Grant Eligibility based on headcount
+      const grantEligible = headcount <= 200;
+      const finalInsights = aiResult.insights || [];
+      if (grantEligible) {
+        finalInsights.push(`You may be eligible for the MSME Digital Grant Madani 2025 — up to RM5,000 (50% matching) for digital adoption.`);
+      }
 
       const monthlyTotal = availableModules
         .filter(m => recommended.includes(m.id))
@@ -61,26 +99,20 @@ export default function OnboardingView() {
       setRecommendations({
         modules: recommended,
         monthlyTotal,
-        insights: [
-          headcount >= 15
-            ? `With ${headcount} employees, the Digital Twin simulation will help you model restructuring before committing resources.`
-            : `At ${headcount} employees, focus on automating statutory compliance first to save 8+ hours/month.`,
-          isRetail
-            ? 'Retail businesses in Malaysia benefit significantly from Manglish NLP to process unstructured supplier communications.'
-            : 'Consider enabling NLP later as your communication channels grow.',
-          needsGig
-            ? 'Blockchain escrow will streamline your freelancer payments during peak seasons like CNY and Raya.'
-            : 'Blockchain escrow can be added later when you start outsourcing.',
-          `You may be eligible for the MSME Digital Grant Madani 2025 — up to RM5,000 (50% matching) for digital adoption.`,
-        ],
-        grantEligible: headcount <= 200,
+        insights: finalInsights,
+        grantEligible: grantEligible,
       });
 
       setSelectedModules(recommended);
-      setAnalyzing(false);
       setStep(3);
-    }, 1500);
+
+    } catch (error) {
+      console.error("Error calling AI API:", error);
+    } finally {
+      setAnalyzing(false);
+    }
   };
+  // -----------------------
 
   const toggleModule = (moduleId) => {
     setSelectedModules(prev =>
@@ -204,7 +236,7 @@ export default function OnboardingView() {
         <div className="card p-6 animate-fadeInUp" style={{ opacity: 1 }}>
           <h2 className="text-lg font-bold text-[var(--text-primary)] mb-1">Describe your HR needs</h2>
           <p className="text-xs text-[var(--text-muted)] mb-4">
-            Write naturally about your business challenges. Our AI (powered by ILMU-GLM-5.1) will analyze and recommend the right modules.
+            Write naturally about your business challenges. Our AI will analyze and recommend the right modules.
           </p>
 
           <textarea
@@ -248,7 +280,7 @@ export default function OnboardingView() {
               {analyzing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing with GLM AI...
+                  Analyzing with Gemini AI...
                 </>
               ) : (
                 <>
@@ -277,7 +309,7 @@ export default function OnboardingView() {
               </div>
               <h3 className="text-sm font-bold text-[var(--text-primary)]">AI Recommendations</h3>
               <span className="ml-auto px-2 py-0.5 rounded-full text-[9px] font-bold bg-[var(--primary)]/10 text-[var(--primary-light)]">
-                ILMU-GLM-5.1
+                Gemini AI
               </span>
             </div>
             <div className="space-y-2">
