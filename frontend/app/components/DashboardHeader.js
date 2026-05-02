@@ -115,7 +115,7 @@ export default function DashboardHeader() {
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/>
                   </svg>
-                  Gemini AI Response
+                   AI Response
                 </p>
                 <button onClick={() => setAiAnswer("")} className="text-[var(--text-muted)] hover:text-white transition-colors">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

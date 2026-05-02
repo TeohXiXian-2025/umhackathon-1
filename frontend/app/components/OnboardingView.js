@@ -5,7 +5,7 @@
  * ==============================================
  * Personalized onboarding via semantic business description.
  * Users describe their business goals and needs in natural language,
- * and Gemini AI analyzes it to recommend modules.
+ * and AI analyzes it to recommend modules.
  */
 
 import { useState } from 'react';
@@ -280,7 +280,7 @@ export default function OnboardingView() {
               {analyzing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing with Gemini AI...
+                  Analyzing with AI...
                 </>
               ) : (
                 <>
