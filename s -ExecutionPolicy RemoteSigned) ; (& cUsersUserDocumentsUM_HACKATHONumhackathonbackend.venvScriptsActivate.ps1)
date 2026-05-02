@@ -1,0 +1,69 @@
+[33m56b959a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Testing setup
+[33m60c4ade[m refined frontend
+[33mabb431b[m Refine frontend
+[33m3044d19[m docs: add Vercel live demo link to README
+[33ma2cd808[m docs: update README with full project documentation
+[33mc27dbf5[m Fixed gitignore and updated AI UI components
+[33m9144c7e[m Stop tracking Python virtual environment
+[33m3eb4392[m Delete Documentation/Pitching Deck.pdf
+[33m5ea7d13[m Add files via upload
+[33mf400da1[m Add files via upload
+[33m91dfed6[m Delete Documentation/Pitching Deck.pdf
+[33mecd6425[m Rename PeopleGraph UMH.pdf to Pitching Deck.pdf
+[33ma9fd0fa[m Delete Documentation/Pitching Deck.pdf
+[33meeed676[m Add files via upload
+[33m1b3611b[m Add recorded pitching video link to README
+[33m0209717[m Rename Pitching Deck..pdf to Pitching Deck.pdf
+[33ma246470[m Rename Pitching Deck.. pdf to Pitching Deck..pdf
+[33m3c0588d[m Rename Pitching Deck.pdf to Pitching Deck.. pdf
+[33m7bd56b2[m Rename DOC-20260425-WA0242..pdf to Pitching Deck.pdf
+[33m7f9bab5[m Add files via upload
+[33mbfab6fc[m Delete Documentation/PeopleGraph UMH.pdf
+[33m51721ac[m Add files via upload
+[33m90885b9[m Delete Documentation/PeopleGraph UMH.pdf
+[33mbd0c7e2[m Add files via upload
+[33m341ec41[m Delete Documentation/Pitching Deck.pdf
+[33mdcba030[m Rename Product Requirement Document to Product Requirement Document.pdf
+[33m687e224[m Rename Quality Assurance Testing to Quality Assurance Testing.pdf
+[33mc82b9af[m Rename Pitching Deck to Pitching Deck.pdf
+[33mcc144f8[m Delete Documentation/System Analysis Documentt.pdf
+[33m140e103[m Rename System Analysis Document to System Analysis Documentt.pdf
+[33m36ec752[m Rename DOC-20260425-WA0240..pdf to System AnalysisDocument.pdf
+[33m956693f[m Add files via upload
+[33m2bb1806[m Rename PeopleGraph UMH.pdf to Pitching Deck
+[33me432e40[m Add files via upload
+[33mdc20920[m Delete Pitching Deck.pdf
+[33m6342c75[m Rename Documentation/PeopleGraph UMH.pdf to Pitching Deck.pdf
+[33m4af759f[m Add files via upload
+[33m7f88611[m Rename System Analysis Document to Documentation/System Analysis Document
+[33m825a2c0[m Rename Quality Assurance Testing to Documentation/Quality Assurance Testing
+[33m941fadb[m Rename Product Requirement Document to Documentation/Product Requirement Document
+[33me678df3[m Rename DOC-20260425-WA0239..pdf to Quality Assurance Testing
+[33m9debd98[m Rename DOC-20260425-WA0240..pdf to System Analysis Document
+[33m0a799d5[m Delete Documentation
+[33m1b7cf6a[m Create Documentation
+[33mf30ba20[m Rename DOC-20260425-WA0238..pdf to Product Requirement Document
+[33m1925903[m Add files via upload
+[33me59ce03[m Revise README with new project details and features
+[33mcf541a5[m updated frontend
+[33m3d50d18[m ft
+[33m2e94621[m UPDATE FRONTEND
+[33m7be9f40[m push
+[33m1a8279b[m Merge branch 'main' of https://github.com/Pohyi118/umhackathon
+[33m7d98226[m feat: Add initial project structure with .gitignore, requirements, and core logic for decision engine and Neo4j integration
+[33m4d3f276[m Merge branch 'main' of https://github.com/Pohyi118/umhackathon
+[33med85888[m Updated README
+[33m78fc8fd[m Update env example
+[33m0e48cc3[m Updated ENV example file
+[33mb38d57a[m Merge branch 'main' of https://github.com/Pohyi118/umhackathon
+[33m4af7460[m Updated Demo to a working version/prototype working, logic and AI still needs reworks
+[33m6a7fca9[m Update analyst_logic.py
+[33m4e15323[m Implement NadiPekerjaCommander for workforce analysisupda
+[33mb0c204e[m feat: finalize secure project structure
+[33m4b68a8c[m refactor: Clean up old datasets and upload Final V2 ETL Pipeline
+[33m6cbba35[m Delete nadi_pekerja_ultimate_twin.json
+[33mc484661[m Add files via upload
+[33m25f3f29[m Merge branch 'main' of https://github.com/Pohyi118/umhackathon ~                                                                                                          ~                                                                                                          ~                                                                                                          ~                                                                                                          ~                                                                                                          .git/MERGE_MSG[+] [unix] (18:22 20/04/2026)                                                        6,53 All Already at oldest change                       Merge branch 'main' of https://github.com/Pohyi118/umhackathon Already at oldest change                       commit.
+[33ma3ddfe3[m Initial commit
+[33m250e857[m Created using Colab
+[33m8b3b74d[m Initial commit

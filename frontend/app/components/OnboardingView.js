@@ -8,7 +8,9 @@
  * and AI analyzes it to recommend modules.
  */
 
+// 1. ADDED useContext HERE
 import { useState } from 'react';
+import { useNavigation } from '../context/NavigationContext';
 
 const availableModules = [
   { id: 'payroll', name: 'Payroll & Statutory', desc: 'EPF, SOCSO, EIS, PCB auto-calculation', price: 49, icon: '💰' },
@@ -22,6 +24,8 @@ const availableModules = [
 ];
 
 export default function OnboardingView() {
+  const { setActiveView } = useNavigation();
+
   const [step, setStep] = useState(1);
   const [businessDesc, setBusinessDesc] = useState('');
   const [businessDetails, setBusinessDetails] = useState({
@@ -35,7 +39,7 @@ export default function OnboardingView() {
   const [recommendations, setRecommendations] = useState(null);
   const [selectedModules, setSelectedModules] = useState([]);
 
-  // --- NEW AI FUNCTION ---
+  // --- AI FUNCTION ---
   const handleAnalyze = async () => {
     setAnalyzing(true);
     const headcount = parseInt(businessDetails.headcount) || 10;
@@ -67,25 +71,20 @@ export default function OnboardingView() {
 
       const data = await response.json();
       
-      // We parse the AI's text response into a JSON object to feed the UI
       let aiResult;
       try {
-        // Clean the string just in case the AI added markdown backticks
         const cleanJsonString = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
         aiResult = JSON.parse(cleanJsonString);
       } catch (parseError) {
         console.error("Failed to parse AI JSON:", data.text);
-        // Fallback if the AI forgets to format as JSON
         aiResult = {
           modules: ['payroll', 'attendance', 'nlp'],
           insights: ["We analyzed your text and recommend starting with our core automation modules to streamline your current bottlenecks."]
         };
       }
 
-      // Ensure they always get at least payroll and attendance for the demo
       const recommended = [...new Set(['payroll', 'attendance', ...(aiResult.modules || [])])];
       
-      // Hardcoded business logic for Grant Eligibility based on headcount
       const grantEligible = headcount <= 200;
       const finalInsights = aiResult.insights || [];
       if (grantEligible) {
@@ -112,7 +111,6 @@ export default function OnboardingView() {
       setAnalyzing(false);
     }
   };
-  // -----------------------
 
   const toggleModule = (moduleId) => {
     setSelectedModules(prev =>
@@ -121,6 +119,15 @@ export default function OnboardingView() {
         : [...prev, moduleId]
     );
   };
+
+  // 4. UPDATED ACTIVATION FUNCTION HERE
+  const handleActivate = () => {
+    // Switch the active view to your new-entry route natively
+    setActiveView('new-entry');
+    // Scroll back to the top of the page for a clean transition
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  // -------------------------------
 
   const selectedTotal = availableModules
     .filter(m => selectedModules.includes(m.id))
@@ -402,7 +409,10 @@ export default function OnboardingView() {
               >
                 Re-analyze
               </button>
+              
+              {/* --- UPDATED BUTTON --- */}
               <button
+                onClick={handleActivate}
                 className="flex-[2] py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 active:scale-[0.98]"
                 style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))' }}
               >
