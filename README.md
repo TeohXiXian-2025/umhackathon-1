@@ -5,6 +5,7 @@
 PeopleGraph is a full-stack HR intelligence platform that maps workforce activities directly to revenue outcomes. It combines a Force-Directed Value Graph, predictive AI analytics, unstructured data ingestion, and Malaysian statutory compliance automation — all in one unified dashboard.
 
 📹 **Pitch Video**: [Watch on Google Drive](https://drive.google.com/file/d/1GDIpl02ZSARlF4wh13Vv9ylmJIws4RLX/view?usp=drivesdk)
+🌐 **Live Demo**: [umhackathon-1-9n2r.vercel.app](http://umhackathon-1-9n2r.vercel.app/)
 
 ---
 
