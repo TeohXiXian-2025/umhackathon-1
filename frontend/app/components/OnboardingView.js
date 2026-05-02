@@ -309,7 +309,7 @@ export default function OnboardingView() {
               </div>
               <h3 className="text-sm font-bold text-[var(--text-primary)]">AI Recommendations</h3>
               <span className="ml-auto px-2 py-0.5 rounded-full text-[9px] font-bold bg-[var(--primary)]/10 text-[var(--primary-light)]">
-                Gemini AI
+                AI Analyzed
               </span>
             </div>
             <div className="space-y-2">
