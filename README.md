@@ -1,111 +1,182 @@
-# PeopleGraph
+# 🧠 PeopleGraph
 
-An On-Demand Skill-to-Revenue Orchestrator and AI decision engine for Malaysian SMEs, featuring a Force-Directed Value Graph, predictive modeling, unstructured data ingestion, and compliance features.
-## Recorded Pitching Video
-https://drive.google.com/file/d/1GDIpl02ZSARlF4wh13Vv9ylmJIws4RLX/view?usp=drivesdk 
+> **An On-Demand Skill-to-Revenue Orchestrator and AI Decision Engine for Malaysian SMEs**
 
-## Prerequisites
+PeopleGraph is a full-stack HR intelligence platform that maps workforce activities directly to revenue outcomes. It combines a Force-Directed Value Graph, predictive AI analytics, unstructured data ingestion, and Malaysian statutory compliance automation — all in one unified dashboard.
 
-- **Python**: 3.10+
-- **Node.js**: 18+
-- **PostgreSQL**: 14+ (with pgvector extension)
-- **npm** or **yarn**
+📹 **Pitch Video**: [Watch on Google Drive](https://drive.google.com/file/d/1GDIpl02ZSARlF4wh13Vv9ylmJIws4RLX/view?usp=drivesdk)
 
-## Project Structure
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 🕸️ **Value Graph (Digital Twin)** | Force-directed D3.js visualization mapping human activities to revenue flows |
+| 🤖 **Decision Intelligence** | Automated expansion, optimization & outsourcing blueprints from forensic data |
+| 📥 **Unstructured Data Ingestion** | Analyzes WhatsApp logs, sales CSVs, and payroll PDFs — no manual KPI entry |
+| 📈 **AI Predictive Analytics** | Ensemble forecasting for hiring impact and 30-day revenue projections |
+| 💬 **NLP & Sentiment Analysis** | YTL AI Labs ILMU-GLM-5.1 integration for employee feedback and SaaS onboarding |
+| 🏖️ **Cuti Peristiwa Shock Simulation** | Models public holiday operational risk and warehouse SLA disruption |
+| 📊 **Real-Time Dashboard** | Attendance heatmaps, team energy metrics, and HR KPIs at a glance |
+| ⚖️ **Statutory Compliance** | Automated EPF / SOCSO / EIS / PCB calculations with strict Malaysian law enforcement |
+| 💡 **Strategic Insight Panel** | Dual-mode Hiring ROI & EA1955 Severance Risk calculator |
+
+---
+
+## 🏗️ Project Structure
 
 ```
-umhackathon/
-├── backend/           # FastAPI application
+umhackathon-1/
+├── backend/                    # FastAPI application (Python)
 │   ├── app/
-│   │   ├── models/    # SQLAlchemy models
-│   │   ├── routers/   # API endpoints
-│   │   ├── services/  # Business logic
-│   │   └── schemas/   # Pydantic schemas
-│   └── requirements.txt
-├── frontend/          # Next.js application
-│   ├── app/           # App router pages
-│   │   └── components/
-│   └── package.json
-├── src/               # Utility scripts
-└── Data PreprocessingV2/  # Data processing scripts
+│   │   ├── main.py             # App entry point, CORS, router mounting
+│   │   ├── config.py           # Environment & settings
+│   │   ├── database.py         # Async SQLAlchemy engine
+│   │   ├── models/             # SQLAlchemy ORM models
+│   │   ├── routers/            # API route handlers
+│   │   │   ├── employees.py
+│   │   │   ├── compliance.py
+│   │   │   ├── dashboard.py
+│   │   │   └── ai_analytics.py
+│   │   ├── services/           # Business logic layer
+│   │   └── schemas/            # Pydantic request/response schemas
+│   ├── seed.py                 # Demo data seeder
+│   ├── seed_attendance.py      # Attendance seeder
+│   ├── seed_from_json.py       # JSON-based seeder
+│   ├── requirements.txt
+│   └── Dockerfile
+├── frontend/                   # Next.js application (TypeScript)
+│   ├── app/                    # App Router pages
+│   │   └── components/         # Reusable React components
+│   │       ├── StrategicInsightPanel.js
+│   │       └── StatutoryView.js
+│   ├── lib/                    # Utility functions
+│   ├── public/                 # Static assets
+│   └── Dockerfile
+├── src/                        # Utility & standalone scripts
+├── Data PreprocessingV2/       # Latest data processing pipeline
+├── Data_PreprocessingV1/       # Legacy data processing scripts
+├── Documentation/              # Architecture and design docs
+├── deploy/                     # Deployment configurations
+├── docker-compose.yml          # Local development Docker setup
+├── docker-compose.prod.yml     # Production Docker setup
+└── requirements.txt            # Root-level Python dependencies
 ```
 
-## Backend Setup
+---
 
-1. **Create virtual environment**
-   ```bash
-   cd backend
-   python -m venv .venv
-   .venv\Scripts\Activate  # Windows
-   # source .venv/bin/activate  # Linux/Mac
-   ```
+## 🚀 Quick Start
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Prerequisites
 
-3. **Configure environment**
-   Create `.env` in `backend/`:
-   ```env
-   DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/peoplegraph
-   SECRET_KEY=your-secret-key
-   ALGORITHM=HS256
-   ACCESS_TOKEN_EXPIRE_MINUTES=30
-   ```
+| Tool | Version |
+|---|---|
+| Python | 3.10+ |
+| Node.js | 18+ |
+| npm / yarn | Latest |
+| PostgreSQL | 14+ (with `pgvector` extension) |
 
-4. **Setup database**
-   ```bash
-   # Create database
-   psql -U postgres -c "CREATE DATABASE peoplegraph;"
-   
-   # Run migrations
-   alembic upgrade head
-   ```
+---
 
-5. **Seed database (optional)**
-   ```bash
-   python seed.py
-   ```
+### 🐍 Backend Setup
 
-6. **Start backend server**
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
+```bash
+cd backend
 
-## Frontend Setup
+# 1. Create & activate virtual environment
+python -m venv .venv
+.venv\Scripts\Activate          # Windows
+# source .venv/bin/activate     # Linux / Mac
 
-1. **Install dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
+# 2. Install dependencies
+pip install -r requirements.txt
 
-2. **Start development server**
-   ```bash
-   npm run dev
-   ```
+# 3. Configure environment — create backend/.env
+```
 
-3. **Build for production**
-   ```bash
-   npm run build
-   npm start
-   ```
+**`backend/.env`** (minimum required):
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/peoplegraph
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
 
-## API Documentation
+```bash
+# 4. Create the database
+psql -U postgres -c "CREATE DATABASE peoplegraph;"
+
+# 5. Run migrations
+alembic upgrade head
+
+# 6. (Optional) Seed demo data
+python seed.py
+
+# 7. Start backend server
+uvicorn app.main:app --reload --port 8000
+```
+
+---
+
+### ⚛️ Frontend Setup
+
+```bash
+cd frontend
+
+# 1. Install dependencies
+npm install
+
+# 2. Start development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**Build for production:**
+```bash
+npm run build
+npm start
+```
+
+---
+
+### 🐳 Docker (Recommended)
+
+```bash
+# Start all services locally
+docker compose up --build
+
+# Production
+docker compose -f docker-compose.prod.yml up --build
+```
+
+---
+
+## 📡 API Documentation
 
 Once the backend is running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
 
-### New AI Endpoint: Cuti Peristiwa Shock
+| Interface | URL |
+|---|---|
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
+| Health Check | http://localhost:8000/health |
 
-Simulate sudden public holiday operational risk during peak demand:
+### API Endpoints Overview
 
-- `POST /api/v1/ai/simulate-cuti-peristiwa`
-- Purpose: Compare statutory Public Holiday wage penalty vs estimated SLA impact from warehouse shutdown.
+| Router | Prefix | Description |
+|---|---|---|
+| Employees | `/api/v1/employees` | CRUD for employee records |
+| Compliance | `/api/v1/compliance` | EPF / SOCSO / EIS / PCB calculations |
+| Dashboard | `/api/v1/dashboard` | Attendance, sentiment, and KPI data |
+| AI Analytics | `/api/v1/ai` | Predictive models and simulations |
 
-Example request body:
+### 🏖️ Cuti Peristiwa Shock Simulation
+
+Simulate the financial impact of a sudden public holiday on peak-demand operations:
+
+**`POST /api/v1/ai/simulate-cuti-peristiwa`**
 
 ```json
 {
@@ -118,28 +189,41 @@ Example request body:
 }
 ```
 
-## Features
+Returns a comparison of statutory Public Holiday wage penalty vs. estimated SLA impact from warehouse shutdown.
 
-- **Value Graph (Digital Twin)**: Force-directed visualization mapping revenue directly to human activities using D3.js.
-- **Decision Intelligence**: Automated expansion, optimization, and outsourcing blueprints based on forensic data analysis.
-- **On-Demand Data Ingestion**: Analyzes unstructured data (WhatsApp logs, sales CSVs, payroll PDFs) to bypass manual KPI tracking.
-- **AI Analytics**: Predictive models for hiring and revenue impact using Ensemble Forecasting.
-- **NLP & Sentiment**: YTL AI Labs ILMU-GLM-5.1 integration for employee feedback analysis and SaaS onboarding suggestions.
-- **Cuti Peristiwa Shock Simulation**: Simulates public holiday operational risk and warehouse SLA impact.
-- **Dashboard**: Real-time HR metrics, 30-day attendance heatmaps, and team energy tracking.
-- **Compliance**: Automated statutory tracking (EPF/SOCSO/EIS/PCB) with strict formatting and fallback data logic.
+---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 ### Backend
-- FastAPI
-- SQLAlchemy (async)
-- PostgreSQL
-- scikit-learn
-- pandas
+- **[FastAPI](https://fastapi.tiangolo.com/)** — Async REST API framework
+- **SQLAlchemy (async)** — ORM with async support
+- **SQLite / PostgreSQL** — Development & production databases
+- **scikit-learn** — Ensemble forecasting models
+- **pandas** — Data processing and aggregation
+- **Alembic** — Database migrations
 
 ### Frontend
-- Next.js 16
-- React 19
-- D3.js
-- Tailwind CSS 4
+- **[Next.js 16](https://nextjs.org/)** — React framework with App Router
+- **React 19** — UI component library
+- **[D3.js](https://d3js.org/)** — Force-directed graph visualizations
+- **Tailwind CSS 4** — Utility-first styling
+- **TypeScript** — Type-safe development
+
+### Infrastructure
+- **Docker & Docker Compose** — Containerized deployment
+- **CORS Middleware** — Secure cross-origin API access
+
+---
+
+## 🌐 Deployment
+
+See [`DEPLOY_PROD.md`](./DEPLOY_PROD.md) for full production deployment instructions.
+
+---
+
+## 👥 Team
+
+Built for **UM Hackathon 2025** — University of Malaya.
+
+Repository: [TeohXiXian-2025/umhackathon-1](https://github.com/TeohXiXian-2025/umhackathon-1)
